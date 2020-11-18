@@ -10,6 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import os
+from dotenv import find_dotenv, load_dotenv
+from django.core.management.utils import get_random_secret_key
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,7 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '_$gqs&!vk!k6#u2!2%g!2)s4qk00-0*qag4+l+zng9u*jcck60'
+load_dotenv(find_dotenv())
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+if SECRET_KEY is None:
+    SECRET_KEY = get_random_secret_key()
+    with open('.env', 'a+') as envfile:
+        envfile.write(f'SECRET_KEY="{SECRET_KEY}"\n')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
