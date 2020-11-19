@@ -4,7 +4,7 @@ from . import models
 import json
 from neo4j import GraphDatabase
 
-driver = GraphDatabase.driver("neo4j://localhost:7687", auth=("user", "password"))
+driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "abcd1234"))
 
 # Create your views here.
 ## This function basically retrieves all users
@@ -365,6 +365,93 @@ def getConnectedUsers(request, id):
             email=record["email"],
             date=record["connectionDate"]
             ).toJSON()
+            for record in result
+    ]
+
+    response = {
+        "users" : users
+    }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+## Get similar users from the same country
+def getSimilarUsersByCountry(request, id):
+    ## Start the session
+    session = driver.session()
+    # Define the query
+    query = f"""
+    MATCH (u:User) - [:comesFROM] -> (c:Country) 
+    WHERE id(c) = {id} 
+    RETURN id(u) AS id, u.name AS name, u.email AS email, u.github AS github
+    """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+
+    users = [
+        models.FShipUser(
+            id=record["id"], 
+            name=record["name"], 
+            gitHandle=record["github"], 
+            email=record["email"]).toJSON()
+            for record in result
+    ]
+
+    response = {
+        "users" : users
+    }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+## Get similar users with the same bio
+def getSimilarUsersByBio(request, id):
+    ## Start the session
+    session = driver.session()
+    # Define the query
+    query = f"""
+    MATCH (u:User) - [:hasBio] -> (b:Bio) 
+    WHERE id(b) = {id} 
+    RETURN id(u) AS id, u.name AS name, u.email AS email, u.github AS github
+    """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+
+    users = [
+        models.FShipUser(
+            id=record["id"], 
+            name=record["name"], 
+            gitHandle=record["github"], 
+            email=record["email"]).toJSON()
+            for record in result
+    ]
+
+    response = {
+        "users" : users
+    }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+## Get similar users with the same dislike
+def getSimilarUsersByDislikes(request, id):
+    ## Start the session
+    session = driver.session()
+    # Define the query
+    query = f"""
+    MATCH (u:User) - [:dislikes] -> (d:Dislike) 
+    WHERE id(d) = {id} 
+    RETURN id(u) AS id, u.name AS name, u.email AS email, u.github AS github
+    """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+
+    users = [
+        models.FShipUser(
+            id=record["id"], 
+            name=record["name"], 
+            gitHandle=record["github"], 
+            email=record["email"]).toJSON()
             for record in result
     ]
 
