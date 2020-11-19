@@ -1,6 +1,10 @@
-# Fship
+# Fship - (Friend|Fellow)ship
+A platform to expand your reach and meet new Fellows outside of your Pod, based off of interests/hobbies/dislikes!
 
-This project has as its backend a graph database, __Neo4J__ and __Django Framework__. 
+
+## Development Setup
+
+### Neo4j database setup
 
 To get started with setting up __Neo4J__ on your Desktop:
 * Make sure you have Java installed on your Machine and that the _JAVA_HOME_ path is set.
@@ -8,17 +12,17 @@ To get started with setting up __Neo4J__ on your Desktop:
 
 However, if you don't want to download Neo4j locally on your machine, you can create an account for the Neo4j Sandbox, which is more of a free online Neo4J Database instance for about 10 Days. There will be no difference in how we utilise the Desktop version from how one may use the SandBox for our project. You can get started with the Sandbox [here](https://neo4j.com/sandbox/).
 
-Now that you have __Neo4J__ set up, our project uses the official Neo4J Driver to communicate for communication between Neo4J and the Django project over the [Bolt protocol](https://en.wikipedia.org/wiki/Bolt_(network_protocol)). To install the driver, ensure you first have python and pip installed, then run:
+Now that you have __Neo4J__ set up, our project uses the official Neo4J Driver to communicate for communication between Neo4J and the Django project over the [Bolt protocol](https://en.wikipedia.org/wiki/Bolt_(network_protocol)). To install the driver, run this command in your pipenv virtual environment:
 
 ```
-pip install neo4j
+pipenv install neo4j
 ```
 
 Now that you have your environment set up, open your Neo4J Application (if desktop) and follow [these](https://neo4j.com/developer/neo4j-desktop/) instructions to create a new database. If you are using the sandbox account, this is a good [blog](https://neo4j.com/blog/graphcast-neo4j-sandbox-quick-start-guide/) to help you get started. You will be asked to create a username and a password. Make sure you remember these as they will be very useful when connecting the Django project to the Neo4J database over the Neo4J Driver.
 
 Once you have a new database created, start it and open the Neo4J browser (as instructions in the previous paragraph have shown you).
 
-The following __cypher__ queries can help you get started:
+The following __cypher__ queries can help you get started (**Note: Replace all IDs by the actual id**):
 Create User
 ```
 CREATE (u:User{name:"John Smith",email:"johnsmith@gmail.com",github:"https://github.com/JohnSmith"}) RETURN u
@@ -45,8 +49,7 @@ Both queries above should return nodes that should appear as circles on your Neo
 
 Create a user bio (you can enter any text in the quotation marks present in the description)
 ```
-MATCH (u:User) WHERE id(u) = userID
-MERGE (u) - [h:hasBio] -> (b:Bio{description:""}) RETURN u,h,b
+MATCH (u:User) WHERE id(u) = userID MERGE (u) - [h:hasBio] -> (b:Bio{description:""}) RETURN u,h,b
 ```
 
 Link John Smith, our create user, to the country and timezone we created:
@@ -82,7 +85,7 @@ MATCH (n) RETURN n
 ```
 You should expect to see a graph, with nodes connected to a central node (the user).
 
-**Congratulations**.Let's proceed to how you'll link it to Django.
+**Congratulations**. Let's proceed to how you'll link it to the Django webserver.
 
 In Django, navigate to the _views.py_ under the fship_app folder. At the top, you will see the following line of code:
 ```
