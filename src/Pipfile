@@ -8,6 +8,13 @@ verify_ssl = true
 [packages]
 django = "*"
 python-dotenv = "*"
+neo4j = "*"
+djangorestframework = "*"
+django-cors-headers = "*"
+djangorestframework-simplejwt = "*"
+djangorestframework-stubs = "*"
+pyjwt = "*"
+django-oauth-toolkit = "*"
 
 [requires]
 python_version = "3.8"

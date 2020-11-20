@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import os
 from dotenv import find_dotenv, load_dotenv
 from django.core.management.utils import get_random_secret_key
+from corsheaders.defaults import default_headers
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -46,6 +47,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'corsheaders',
+    'oauth2_provider',
+
+    'fship_app',
 ]
 
 MIDDLEWARE = [
@@ -59,6 +67,22 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'Fship.urls'
+
+CORS_ORIGIN_WHITELIST = (
+    'https://localhost:8000',
+)
+
+# allow all requests containing any of the default headers(as in django docs) or content-type header
+CORS_ALLOW_HEADERS = default_headers + (
+    'contenttype',
+)
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
 
 TEMPLATES = [
     {

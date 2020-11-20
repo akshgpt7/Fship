@@ -1,15 +1,20 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 ## Models made specifically for Neo4J
-class FShipUser:
+class fshipUser:
 
     ## Initialize this object
-    def __init__(self, id:int, name:str, gitHandle:str, email:str):
+    def __init__(self, id:int, name:str, gitHandle:str, email:str, password):
         self.id = id
         self.name = name
         self.gitHandle = gitHandle
         self.email = email
+        self.password = password
+
+        ##################### add this to the part where user signs-up and CREATE User cypher query is run
+        # User.objects.create(username=self.gitHandle, email=self.email, password=self.password)
             
     ## Return a dict version of the object for easy serialization
     def toJSON(self):
@@ -110,8 +115,8 @@ class HobbyWithFrequency(Hobby):
 
 
 ## A user who's had connections with other users
-## Inherit from FShipUser
-class UserWithConnections(FShipUser):
+## Inherit from fshipUser
+class UserWithConnections(fshipUser):
 
     def __init__(self, date: str, **kwargs):
         super(UserWithConnections, self).__init__(**kwargs)
