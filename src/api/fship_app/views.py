@@ -403,35 +403,6 @@ def getSimilarUsersByCountry(request, id):
 
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
-## Get similar users with the same bio
-def getSimilarUsersByBio(request, id):
-    ## Start the session
-    session = driver.session()
-    # Define the query
-    query = f"""
-    MATCH (u:User) - [:hasBio] -> (b:Bio) 
-    WHERE id(b) = {id} 
-    RETURN id(u) AS id, u.name AS name, u.email AS email, u.github AS github
-    """ 
-
-    result = session.run(query) ## Execute the function 
-    ## The result is not subsciptible so we loop to get the single value 
-
-    users = [
-        models.FShipUser(
-            id=record["id"], 
-            name=record["name"], 
-            gitHandle=record["github"], 
-            email=record["email"]).toJSON()
-            for record in result
-    ]
-
-    response = {
-        "users" : users
-    }
-
-    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
-
 ## Get similar users with the same dislike
 def getSimilarUsersByDislikes(request, id):
     ## Start the session

@@ -17,7 +17,6 @@ urlpatterns = [
     path('skills/<int:id>/users/get', views.getUsersWithSelectedSkill, name= 'usersWithCurrentSkills'), # Get users with a particular skill
     path('user/<int:id>/connectedUsers/get', views.getConnectedUsers, name= 'usersWithCurrentSkills'), # Get users connected to current user
     path('user/similar/country/<int:id>', views.getSimilarUsersByCountry, name= 'similarUsersWithCountry'), # Get users with same country
-    path('user/similar/bio/<int:id>', views.getSimilarUsersByBio, name= 'similarUsersWithBio'), # Get users with same bio
     path('user/similar/dislike/<int:id>', views.getSimilarUsersByDislikes, name= 'similarUsersWithDislike'), # Get users with same dislike
 ]
 
