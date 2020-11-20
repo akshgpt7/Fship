@@ -4,7 +4,7 @@ from . import models
 import json
 from neo4j import GraphDatabase
 
-driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "abcd1234"))
+driver = GraphDatabase.driver("neo4j://localhost:7687", auth=("neo4j", "yourpassword"))
 
 # Create your views here.
 ## This function basically retrieves all users
@@ -155,7 +155,7 @@ def getUserTimeZoneAndCountry(request, id):
     session = driver.session()
     # Define the query
     query = f"""
-    MATCH (u:User) - [:followsTimeZone] -> (tz:Timezone), (u) - [:comesFrom] -> (c:Country)
+    MATCH (u:User) - [:followsTimeZone] -> (tz:Timezone), (u) - [:comesFROM] -> (c:Country)
     WHERE id(u) = {id}
     RETURN id(tz) AS timezoneID, tz.tz AS timezone,id(c) AS countryID, c.name AS country
     """ 
@@ -433,13 +433,241 @@ def getSimilarUsersByDislikes(request, id):
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
 
+## Search users who have a hobby indicated on the search phrase
+def searchUsersByHobby(request, hobby):
+    ## Start the session
+    session = driver.session()
+    # Define the query
+    query = f"""
+    MATCH (u:User) - [:hasHobbie] -> (h:Hobbie)
+    WHERE toLower(h.name) = toLower(\"{hobby}\")
+    RETURN id(u) AS id, u.name AS name, u.email AS email, u.github AS github
+    """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+
+    users = [
+        models.FShipUser(
+            id=record["id"], 
+            name=record["name"], 
+            gitHandle=record["github"], 
+            email=record["email"],
+            ).toJSON()
+            for record in result
+    ]
+
+    response = {
+        "users" : users
+    }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+
+## Search users who have a tech skill indicated by the search phrase
+def searchUsersByHobby(request, skill):
+    ## Start the session
+    session = driver.session()
+    # Define the query
+    query = f"""
+    MATCH (u:User) - [:isInterestedIn] -> (s:TechSkill)
+    WHERE toLower(s.name) = toLower(\"{skill}\")
+    RETURN id(u) AS id, u.name AS name, u.email AS email, u.github AS github
+    """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+
+    users = [
+        models.FShipUser(
+            id=record["id"], 
+            name=record["name"], 
+            gitHandle=record["github"], 
+            email=record["email"],
+            ).toJSON()
+            for record in result
+    ]
+
+    response = {
+        "users" : users
+    }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+## Search for users who are from a specific country
+def searchUsersByCountry(request, country):
+    ## Start the session
+    session = driver.session()
+    # Define the query
+    query = f"""
+    MATCH (u:User) - [:comesFrom] -> (c:Country)
+    WHERE toLower(c.name) = toLower(\"{country}\")
+    RETURN id(u) AS id, u.name AS name, u.email AS email, u.github AS github
+    """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+
+    users = [
+        models.FShipUser(
+            id=record["id"], 
+            name=record["name"], 
+            gitHandle=record["github"], 
+            email=record["email"],
+            ).toJSON()
+            for record in result
+    ]
+
+    response = {
+        "users" : users
+    }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+## Get users who are most similar to the one whose id you pass
+def getSimilarUsersByHobby(request, id):
+    ## Start the session
+    session = driver.session()
+    ## Define the query
+    ## This query defines a similarity co-efficient between 0 and 1. Only users with a score
+    ## greater that zero are returned, meaning, the current user must share at least one
+    ## skill with a user for a user to be returned. The greater the similarity, the higher
+    ## the coeffecient. 
+    query = f"""
+    MATCH (u:User) - [:hasHobbie] -> (h:Hobbie) 
+    WHERE id(u) = {id} 
+    WITH collect(h) AS hobbies, u 
+    MATCH (u1:User) - [has:hasHobbie] -> (h1:Hobbie) 
+    WHERE h1 in hobbies AND u<> u1  WITH u1, size(hobbies)
+    AS totalHobbies, count(has) AS freq WITH u1, 
+    (toFloat(freq)/totalHobbies) AS coef 
+    RETURN id(u1) AS id, u1.name AS name, u1.email AS email, u1.github AS github, 
+    coef AS similarity_coefficient
+    ORDER BY coef DESC
+    """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+
+    similar_users = [
+        models.SimilarUser(
+            id=record["id"], 
+            name=record["name"], 
+            gitHandle=record["github"], 
+            email=record["email"],
+            coefficient = record["similarity_coefficient"]
+            ).toJSON()
+            for record in result
+    ]
+
+    response = {
+        "users" : similar_users
+    }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+
+## Get users who are most similar to the one whose id you pass
+def getSimilarUsersBySkill(request, id):
+    ## Start the session
+    session = driver.session()
+    ## Define the query
+    ## This query defines a similarity co-efficient between 0 and 1. Only users with a score
+    ## greater that zero are returned, meaning, the current user must share at least one
+    ## skill with a user for a user to be returned. The greater the similarity, the higher
+    ## the coeffecient. 
+    query = f"""
+    MATCH (u:User) - [:isInterestedIn] -> (ts:TechSkill)
+    WHERE id(u) = {id} 
+    WITH collect(ts) AS skills, u 
+    MATCH (u1:User) - [has:isInterestedIn] -> (ts1:TechSkill)
+    WHERE ts1 in skills 
+    AND u<> u1  WITH u1, size(skills) AS totalSkills, 
+    count(has) AS freq WITH u1, 
+    (toFloat(freq)/totalSkills) AS coef 
+    RETURN id(u1) AS id, u1.name AS name, u1.email AS email, u1.github AS github, 
+    coef AS similarity_coefficient
+    ORDER BY coef DESC
+    """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+
+    similar_users = [
+        models.SimilarUser(
+            id=record["id"], 
+            name=record["name"], 
+            gitHandle=record["github"], 
+            email=record["email"],
+            coefficient = record["similarity_coefficient"]
+            ).toJSON()
+            for record in result
+    ]
+
+    response = {
+        "users" : similar_users
+    }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+
+## Get users who are most similar to the one whose id you pass
+def getSimilarUsersByBio(request, id):
+    ## Start the session
+    session = driver.session()
+    ## Define the query
+    ## This query defines a similarity co-efficient between 0 and 1. Only users with a score
+    ## greater that zero are returned, meaning, the current user must share at least one
+    ## skill with a user for a user to be returned. The greater the similarity, the higher
+    ## the coeffecient. 
+    query = f"""
+        MATCH (u:User) - [:hasBio] -> (b:Bio) 
+        WHERE id(u) = {id} 
+        MATCH (u1:User) - [:hasBio] -> (b1:Bio)
+        WHERE id(u) <> id(u1)
+        WITH apoc.text.jaroWinklerDistance(b.description, b1.description)
+        AS bio_similarity_coefficient, u1, b1 
+        RETURN id(u1) AS id, u1.name AS name, u1.github AS github,
+        u1.email AS email, id(b1) AS bio_id, b1.description AS description,
+        bio_similarity_coefficient 
+        ORDER BY bio_similarity_coefficient DESC
+        """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+
+    similar_users = [
+        models.UsersWithSimilarHobbies(
+            user= models.FShipUser(
+                    id=record["id"], 
+                    name=record["name"], 
+                    gitHandle=record["github"], 
+                    email=record["email"],
+            ),
+            bio= models.Bio(
+                id=record["bio_id"], 
+                description=record["description"],
+            ),
+            coefficient = record["bio_similarity_coefficient"]
+            ).toJSON()
+            for record in result
+        ]
+
+    response = {
+        "users" : similar_users
+    }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+
 """
  Remaining function implementations
  -> registerUser()
- -> getSimilarUsers()
- -> getSimilarUsersByCountry()
- -> getSimilarUsersBySkill()
- -> getSimilarUsersByHobby()
- -> getSimilarUsersByBio()
- -> getSimilarUsersByDislikes()
+ -> createUserBio()
+ -> createUserCountry()
+ -> createUserTimeZone()
+ -> createUserTechSkills()
+ -> createUserHobbies()
+ -> connectUser()
+ -> getUserConnections()
 """
