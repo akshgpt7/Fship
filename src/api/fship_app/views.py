@@ -4,7 +4,7 @@ from . import models
 import json
 from neo4j import GraphDatabase
 
-driver = GraphDatabase.driver("neo4j://localhost:7687", auth=("user", "password"))
+driver = GraphDatabase.driver("bolt://34.224.62.229:32769", auth=("neo4j", "auditors-crust-topic"))
 
 # Create your views here.
 ## This function basically retrieves all users
