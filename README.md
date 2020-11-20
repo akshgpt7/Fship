@@ -63,7 +63,7 @@ Once you have a new database created, start it and open the Neo4j browser (as in
 The following __cypher__ queries can help you get started (**Note: Replace all IDs by the actual id**):
 Create User
 ```
-CREATE (u:User{name:"John Smith",email:"johnsmith@gmail.com",github:"https://github.com/JohnSmith"}) RETURN u
+CREATE (u:User{name:"John Smith",email:"johnsmith@gmail.com",password:"testing321",github:"https://github.com/JohnSmith"}) RETURN u
 ``` 
 If all goes well, the above query should return a node. 
 
