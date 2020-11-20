@@ -15,8 +15,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView)
+from fship_app.serializers import CustomJWTSerializer
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('fship/', include('fship_app.urls')),
+    # Path to obtain a new access and refresh token
+    path('token/', TokenObtainPairView.as_view(serializer_class=CustomJWTSerializer)),
+    # Submit your refresh token to this path to obtain a new access token
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
 ]

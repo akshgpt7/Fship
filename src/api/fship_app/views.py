@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
 from . import models
 import json
 from neo4j import GraphDatabase
@@ -8,6 +10,8 @@ driver = GraphDatabase.driver("bolt://34.224.62.229:32769", auth=("neo4j", "audi
 
 # Create your views here.
 ## This function basically retrieves all users
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def index(request):
     ## Start the session
     session = driver.session()
@@ -16,7 +20,7 @@ def index(request):
     # Execute the query
     result = session.run(query)
     ## Fetch users 
-    people = [models.FShipUser(
+    people = [models.fshipUser(
                         id=record["id"], 
                         name=record["name"], 
                         gitHandle=record["github"], 
@@ -29,6 +33,8 @@ def index(request):
 
 
 ## Function to get primary user details <id, name, github name and email address
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getUserDetails(request, id):
     ## Start the session
     session = driver.session()
@@ -43,7 +49,7 @@ def getUserDetails(request, id):
     ## Get the user details
     ## The 
     for record in result:
-        person = models.FShipUser(
+        person = models.fshipUser(
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
@@ -56,6 +62,8 @@ def getUserDetails(request, id):
     return HttpResponse(json.dumps(person.toJSON()), content_type='application/json; charset=UTF-8')
 
 ## Get a user's hobbies
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getUserHobies(request, id):
     ## Start the session
     session = driver.session()
@@ -87,6 +95,8 @@ def getUserHobies(request, id):
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
 
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getUserSkills(request, id):
     ## Start the session
     session = driver.session()
@@ -119,6 +129,8 @@ def getUserSkills(request, id):
 
 
 # Function to get a user's bio
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getUserBio(request, id):
     ## Start the session
     session = driver.session()
@@ -150,6 +162,8 @@ def getUserBio(request, id):
 
 
 ## Function to get a user's country and timeZone
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getUserTimeZoneAndCountry(request, id):
     ## Start the session
     session = driver.session()
@@ -184,6 +198,8 @@ def getUserTimeZoneAndCountry(request, id):
 
 
 ## Get a user's dislikes
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getUserDislikes(request, id):
     ## Start the session
     session = driver.session()
@@ -217,6 +233,8 @@ def getUserDislikes(request, id):
 
 
 ## Return a list of all skills, together their frequencies available in the database
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getAllSkills(request):
     ## Start the session
     session = driver.session()
@@ -250,6 +268,8 @@ def getAllSkills(request):
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
 ## Return a list of all skills, together their frequencies available in the database
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getAllHobbies(request):
     ## Start the session
     session = driver.session()
@@ -284,6 +304,8 @@ def getAllHobbies(request):
 
 
 ## Get a list of users who have the selected hobby
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getUsersWithSelectedHobby(request, id):
      ## Start the session
     session = driver.session()
@@ -298,7 +320,7 @@ def getUsersWithSelectedHobby(request, id):
     ## The result is not subsciptible so we loop to get the single value 
 
     users = [
-        models.FShipUser(
+        models.fshipUser(
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
@@ -313,6 +335,8 @@ def getUsersWithSelectedHobby(request, id):
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
 ## Retrieve users linked to a particular skill
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getUsersWithSelectedSkill(request, id):
     ## Start the session
     session = driver.session()
@@ -327,7 +351,7 @@ def getUsersWithSelectedSkill(request, id):
     ## The result is not subsciptible so we loop to get the single value 
 
     users = [
-        models.FShipUser(
+        models.fshipUser(
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
@@ -343,6 +367,8 @@ def getUsersWithSelectedSkill(request, id):
 
 
 ## Get users a user has connected with before, e.g via chat
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getConnectedUsers(request, id):
     ## Start the session
     session = driver.session()
@@ -375,6 +401,8 @@ def getConnectedUsers(request, id):
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
 ## Get similar users from the same country
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getSimilarUsersByCountry(request, id):
     ## Start the session
     session = driver.session()
@@ -389,7 +417,7 @@ def getSimilarUsersByCountry(request, id):
     ## The result is not subsciptible so we loop to get the single value 
 
     users = [
-        models.FShipUser(
+        models.fshipUser(
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
@@ -404,6 +432,8 @@ def getSimilarUsersByCountry(request, id):
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
 ## Get similar users with the same bio
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getSimilarUsersByBio(request, id):
     ## Start the session
     session = driver.session()
@@ -418,7 +448,7 @@ def getSimilarUsersByBio(request, id):
     ## The result is not subsciptible so we loop to get the single value 
 
     users = [
-        models.FShipUser(
+        models.fshipUser(
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
@@ -433,6 +463,8 @@ def getSimilarUsersByBio(request, id):
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
 ## Get similar users with the same dislike
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
 def getSimilarUsersByDislikes(request, id):
     ## Start the session
     session = driver.session()
@@ -447,7 +479,7 @@ def getSimilarUsersByDislikes(request, id):
     ## The result is not subsciptible so we loop to get the single value 
 
     users = [
-        models.FShipUser(
+        models.fshipUser(
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
