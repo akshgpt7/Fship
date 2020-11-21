@@ -128,4 +128,32 @@ class UserWithConnections(fshipUser):
         hobbyDict.update(super().toJSON())
         return hobbyDict
 
+## A user who's had connections with other users
+## Inherit from FShipUser
+class SimilarUser(FShipUser):
 
+    def __init__(self, coefficient: float, **kwargs):
+        super(SimilarUser, self).__init__(**kwargs)
+        self.coefficient = coefficient
+
+    def toJSON(self):
+        hobbyDict = {}
+        hobbyDict.update(self.__dict__)
+        hobbyDict.update(super().toJSON())
+        return hobbyDict
+
+
+## A class to get users with similar hobbies
+class UsersWithSimilarHobbies:
+
+    def __init__(self, user:FShipUser, bio:Bio, coefficient: float):
+        self.user = user
+        self.bio = bio
+        self.coefficient = coefficient
+    
+    def toJSON(self):
+        return {
+            "user" : self.user.toJSON(),
+            "bio" : self.bio.toJSON(),
+            "similarity_coefficient" : self.coefficient
+        }
