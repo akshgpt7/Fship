@@ -10,8 +10,6 @@ driver = GraphDatabase.driver("bolt://34.224.62.229:32769", auth=("neo4j", "audi
 
 # Create your views here.
 ## This function basically retrieves all users
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def index(request):
     ## Start the session
     session = driver.session()
@@ -24,7 +22,9 @@ def index(request):
                         id=record["id"], 
                         name=record["name"], 
                         gitHandle=record["github"], 
-                        email=record["email"]).toJSON()
+                        email=record["email"],
+                        password="Confidential").toJSON()
+
                 for record in result
                 ]
     # Close the session                
@@ -33,8 +33,6 @@ def index(request):
 
 
 ## Function to get primary user details <id, name, github name and email address
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getUserDetails(request, id):
     ## Start the session
     session = driver.session()
@@ -53,7 +51,8 @@ def getUserDetails(request, id):
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
-            email=record["email"]
+            email=record["email"],
+            password="Confidential"
         )
 
     ## Close the session
@@ -62,8 +61,6 @@ def getUserDetails(request, id):
     return HttpResponse(json.dumps(person.toJSON()), content_type='application/json; charset=UTF-8')
 
 ## Get a user's hobbies
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getUserHobies(request, id):
     ## Start the session
     session = driver.session()
@@ -95,8 +92,6 @@ def getUserHobies(request, id):
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
 
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getUserSkills(request, id):
     ## Start the session
     session = driver.session()
@@ -129,8 +124,6 @@ def getUserSkills(request, id):
 
 
 # Function to get a user's bio
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getUserBio(request, id):
     ## Start the session
     session = driver.session()
@@ -162,8 +155,6 @@ def getUserBio(request, id):
 
 
 ## Function to get a user's country and timeZone
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getUserTimeZoneAndCountry(request, id):
     ## Start the session
     session = driver.session()
@@ -198,8 +189,6 @@ def getUserTimeZoneAndCountry(request, id):
 
 
 ## Get a user's dislikes
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getUserDislikes(request, id):
     ## Start the session
     session = driver.session()
@@ -233,8 +222,6 @@ def getUserDislikes(request, id):
 
 
 ## Return a list of all skills, together their frequencies available in the database
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getAllSkills(request):
     ## Start the session
     session = driver.session()
@@ -267,9 +254,40 @@ def getAllSkills(request):
 
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
+
+## Return a list of all dislikes, together their frequencies available in the database
+def getAllDislikes(request):
+    ## Start the session
+    session = driver.session()
+    # Define the query
+    query = f"""
+    MATCH (d:Dislike) WITH count(d) AS frequency, d RETURN id(d) AS id, d.description AS dislike, frequency ORDER BY frequency
+    """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+    ## Get all skills
+    dislikes:list = []
+    dislikes = [
+        models.Dislike(
+            id=record["id"], 
+            description=record["dislike"], 
+        ).toJSON()
+        for record in result
+    ]
+
+    ## Close the session
+    session.close()
+
+    ## Create a dict with id and hobbies
+    response = {
+        "dislikes" : dislikes,
+    }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+
 ## Return a list of all skills, together their frequencies available in the database
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getAllHobbies(request):
     ## Start the session
     session = driver.session()
@@ -304,8 +322,6 @@ def getAllHobbies(request):
 
 
 ## Get a list of users who have the selected hobby
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getUsersWithSelectedHobby(request, id):
      ## Start the session
     session = driver.session()
@@ -324,6 +340,7 @@ def getUsersWithSelectedHobby(request, id):
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
+            password="Confidential",
             email=record["email"]).toJSON()
             for record in result
     ]
@@ -334,9 +351,39 @@ def getUsersWithSelectedHobby(request, id):
 
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
+
+## Get a list of users who have the selected dislike
+def getUsersWithSelectedDislike(request, id):
+     ## Start the session
+    session = driver.session()
+    # Define the query
+    query = f"""
+    MATCH (u:User) - [:dislikes] -> (d:Dislike) 
+    WHERE id(d) = {id} 
+    RETURN id(u) AS id, u.name AS name, u.email AS email, u.github AS github
+    """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+
+    users = [
+        models.fshipUser(
+            id=record["id"], 
+            name=record["name"], 
+            gitHandle=record["github"], 
+            password="Confidential",
+            email=record["email"]).toJSON()
+            for record in result
+    ]
+
+    response = {
+        "users" : users
+    }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+
 ## Retrieve users linked to a particular skill
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getUsersWithSelectedSkill(request, id):
     ## Start the session
     session = driver.session()
@@ -355,6 +402,7 @@ def getUsersWithSelectedSkill(request, id):
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
+            password="Confidential",
             email=record["email"]).toJSON()
             for record in result
     ]
@@ -367,8 +415,6 @@ def getUsersWithSelectedSkill(request, id):
 
 
 ## Get users a user has connected with before, e.g via chat
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getConnectedUsers(request, id):
     ## Start the session
     session = driver.session()
@@ -401,8 +447,6 @@ def getConnectedUsers(request, id):
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
 ## Get similar users from the same country
-@api_view(['GET'])
-@permission_classes((IsAuthenticated, ))
 def getSimilarUsersByCountry(request, id):
     ## Start the session
     session = driver.session()
@@ -421,6 +465,7 @@ def getSimilarUsersByCountry(request, id):
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
+            password="Confidential",
             email=record["email"]).toJSON()
             for record in result
     ]
@@ -450,6 +495,7 @@ def getSimilarUsersByDislikes(request, id):
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
+            password="Confidential",
             email=record["email"]).toJSON()
             for record in result
     ]
@@ -481,6 +527,7 @@ def searchUsersByHobby(request, hobby):
             name=record["name"], 
             gitHandle=record["github"], 
             email=record["email"],
+            password="Confidential"
             ).toJSON()
             for record in result
     ]
@@ -507,11 +554,12 @@ def searchUsersByHobby(request, skill):
     ## The result is not subsciptible so we loop to get the single value 
 
     users = [
-        models.FShipUser(
+        models.fshipUser(
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
             email=record["email"],
+            password="Confidential"
             ).toJSON()
             for record in result
     ]
@@ -537,10 +585,11 @@ def searchUsersByCountry(request, country):
     ## The result is not subsciptible so we loop to get the single value 
 
     users = [
-        models.FShipUser(
+        models.fshipUser(
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
+            password="Confidential",
             email=record["email"],
             ).toJSON()
             for record in result
@@ -666,10 +715,11 @@ def getSimilarUsersByBio(request, id):
 
     similar_users = [
         models.UsersWithSimilarHobbies(
-            user= models.FShipUser(
+            user= models.fshipUser(
                     id=record["id"], 
                     name=record["name"], 
-                    gitHandle=record["github"], 
+                    gitHandle=record["github"],
+                    password="Confidential",
                     email=record["email"],
             ),
             bio= models.Bio(

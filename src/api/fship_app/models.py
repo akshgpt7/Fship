@@ -129,8 +129,8 @@ class UserWithConnections(fshipUser):
         return hobbyDict
 
 ## A user who's had connections with other users
-## Inherit from FShipUser
-class SimilarUser(FShipUser):
+## Inherit from fshipUser
+class SimilarUser(fshipUser):
 
     def __init__(self, coefficient: float, **kwargs):
         super(SimilarUser, self).__init__(**kwargs)
@@ -146,7 +146,7 @@ class SimilarUser(FShipUser):
 ## A class to get users with similar hobbies
 class UsersWithSimilarHobbies:
 
-    def __init__(self, user:FShipUser, bio:Bio, coefficient: float):
+    def __init__(self, user:fshipUser, bio:Bio, coefficient: float):
         self.user = user
         self.bio = bio
         self.coefficient = coefficient

@@ -57,6 +57,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -70,6 +72,7 @@ ROOT_URLCONF = 'Fship.urls'
 
 CORS_ORIGIN_WHITELIST = (
     'https://localhost:8000',
+    'http://localhost:8080',
 )
 
 # allow all requests containing any of the default headers(as in django docs) or content-type header
