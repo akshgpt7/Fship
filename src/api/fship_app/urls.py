@@ -26,4 +26,5 @@ urlpatterns = [
     path('user/<int:id>/skills/similarUsers', views.getSimilarUsersBySkill, name='similarUsersBySkill'), # Get users related to the current user by skill
     path('user/<int:id>/hobbies/similarUsers', views.getSimilarUsersByHobby, name='similarUsersByHobby'), # Get users related to the current user by hobby
     path('user/<int:id>/bio/similarUsers', views.getSimilarUsersByBio, name='similarUsersByBio'), # Get users related to the current user by bio
+    path('user/register', views.registerUser, name= 'similarUsersByBio') # Register a new user
 ]

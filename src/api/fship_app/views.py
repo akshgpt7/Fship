@@ -5,8 +5,10 @@ from rest_framework.decorators import api_view, permission_classes
 from . import models
 import json
 from neo4j import GraphDatabase
+from django.views.decorators.csrf import csrf_exempt
 
 driver = GraphDatabase.driver("bolt://34.224.62.229:32769", auth=("neo4j", "auditors-crust-topic"))
+
 
 # Create your views here.
 ## This function basically retrieves all users
@@ -45,7 +47,6 @@ def getUserDetails(request, id):
     result = session.run(query) ## Execute the function 
     ## The result is not subsciptible so we loop to get the single value 
     ## Get the user details
-    ## The 
     for record in result:
         person = models.fshipUser(
             id=record["id"], 
@@ -738,14 +739,109 @@ def getSimilarUsersByBio(request, id):
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
 
+## Route used to register a new user
+"""
+
+{
+    "user":{
+        "name":"name"
+        "email":"email",
+        "github" :"github"
+        "password":"password"
+    },
+    "bio" : "bio description",
+    "country":"country name",
+    "timezone": "timezone",
+    "skills": ["skillA","skillB","skillC"],
+    "hobbies":["hobbyA","hobbyB","hobbyC"]
+    "dislikes" ["dislikeA","dislikeB","dislikeC"]
+}
+"""
+@csrf_exempt
+def registerUser(request):
+    ## Start the session
+    session = driver.session()
+    # This query is used to register a new user
+    # It accepts the user details, their hobbies, skills, country, bio, timezone and dislikes
+    query_builder = """
+        MERGE (u:User{email: "%s", github: "%s", password: "%s", name: "%s"})
+        WITH u
+        MERGE (b:Bio{description: "%s"}) 
+        MERGE (u) - [:hasBio] -> (b)
+        WITH u
+        MERGE (c:Country{name: "%s"})
+        MERGE (u) - [:comesFROM] -> (c)
+        WITH u
+        MERGE (tz:Timezone{tz:"%s"})
+        MERGE (u) - [:followsTimeZone] -> (tz)
+        WITH u
+        UNWIND %s AS skill
+        MERGE (ts:TechSkill{name: skill}) 
+        MERGE (u) - [:isInterestedIn] -> (ts)
+        WITH u
+        UNWIND %s AS hobby
+        MERGE (h:Hobbie{name:hobby})
+        MERGE (u) - [:hasHobbie] -> (h)
+        WITH u
+        UNWIND %s AS dislike
+        MERGE (d:Dislike{description:dislike})
+        MERGE (u) - [:dislikes] -> (d)
+        WITH u
+        RETURN id(u) AS id, u.name AS name, u.email AS email, u.github AS github
+        """
+    
+    json_body = json.loads(request.body)
+    email = json_body["user"]["email"]
+    github = json_body["user"]["github"]
+    password = json_body["user"]["password"]
+    name = json_body["user"]["name"]
+    bio = json_body["bio"]
+    country = json_body["country"]
+    timezone = json_body["timezone"]
+    skills = json_body["skills"]
+    hobbies = json_body["hobbies"]
+    dislikes = json_body["dislikes"]
+
+    query = query_builder % (email,github, password, name,
+                    bio,country,timezone,skills,hobbies,dislikes)
+
+
+    result = session.run(query) ## Execute the query 
+    ## The result is not subsciptible so we loop to get the single value
+
+    person: FShipUser = None
+
+    #  ## Get the user details
+    for record in result:
+        person = models.FShipUser(
+            id=record["id"], 
+            name=record["name"], 
+            gitHandle=record["github"], 
+            email=record["email"]
+        )
+
+    ## Close the session
+    session.close()
+
+    response:dict = {}
+
+    if person is None:
+        response = {
+            "user" : {}
+        }
+    else:
+        response = {
+            "user" : person.toJSON()
+        }
+
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+
+
 """
  Remaining function implementations
- -> registerUser()
- -> createUserBio()
- -> createUserCountry()
- -> createUserTimeZone()
- -> createUserTechSkills()
- -> createUserHobbies()
  -> connectUser()
  -> getUserConnections()
 """
+
