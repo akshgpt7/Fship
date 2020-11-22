@@ -2,14 +2,16 @@ from django.db import models
 
 # Create your models here.
 ## Models made specifically for Neo4J
-class FShipUser:
+class fshipUser:
 
     ## Initialize this object
-    def __init__(self, id:int, name:str, gitHandle:str, email:str):
+    def __init__(self, id:int, name:str, gitHandle:str, email:str, password):
         self.id = id
         self.name = name
         self.gitHandle = gitHandle
         self.email = email
+        self.password = password
+
             
     ## Return a dict version of the object for easy serialization
     def toJSON(self):
@@ -110,8 +112,8 @@ class HobbyWithFrequency(Hobby):
 
 
 ## A user who's had connections with other users
-## Inherit from FShipUser
-class UserWithConnections(FShipUser):
+## Inherit from fshipUser
+class UserWithConnections(fshipUser):
 
     def __init__(self, date: str, **kwargs):
         super(UserWithConnections, self).__init__(**kwargs)
@@ -124,8 +126,8 @@ class UserWithConnections(FShipUser):
         return hobbyDict
 
 ## A user who's had connections with other users
-## Inherit from FShipUser
-class SimilarUser(FShipUser):
+## Inherit from fshipUser
+class SimilarUser(fshipUser):
 
     def __init__(self, coefficient: float, **kwargs):
         super(SimilarUser, self).__init__(**kwargs)
@@ -141,7 +143,7 @@ class SimilarUser(FShipUser):
 ## A class to get users with similar hobbies
 class UsersWithSimilarHobbies:
 
-    def __init__(self, user:FShipUser, bio:Bio, coefficient: float):
+    def __init__(self, user:fshipUser, bio:Bio, coefficient: float):
         self.user = user
         self.bio = bio
         self.coefficient = coefficient
