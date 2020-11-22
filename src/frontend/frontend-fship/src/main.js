@@ -45,7 +45,7 @@ Vue.mixin({
       for (const i of dislikes['dislikes']) {
         dislikes_list.push(i['description'])
       }
-      details['dislikes'] = dislikes_list
+      details['dislikes'] = dislikes_list.filter(dis => dis != '')
 
       return details
       

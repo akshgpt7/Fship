@@ -16,6 +16,9 @@
               <h1 class="uk-heading-divider"></h1>
               <h4>Things to Rant about</h4>
               <button class="uk-button uk-button-danger label uk-button-small" v-for="dislike in allDislikes" :key="dislike.id" @click="showByDislike(dislike.id)">{{ dislike.name }}</button>
+              <h1 class="uk-heading-divider"></h1>
+              <h4>Country</h4>
+              <button class="uk-button bt-yell label uk-button-small" v-for="country in allCountries" :key="country.id" @click="showByCountry(country.id)">{{ country.country }}</button>
               </div>
           </div>
         </div>
@@ -50,7 +53,8 @@ export default {
       showData: {},
       allHobbies: [],
       allSkills: [],
-      allDislikes: []
+      allDislikes: [],
+      allCountries: []
     }
   },
   methods: {
@@ -82,9 +86,17 @@ export default {
       let dis = json.dislikes
       let dislikes = []
       for (const i of dis) {
-        dislikes.push({"name": i.description, "id": i.id})
+        if (i.description != '') {
+          dislikes.push({"name": i.description, "id": i.id})
+        }
       }
       this.allDislikes = dislikes
+    },
+
+    async getCountries() {
+      let response = await fetch(this.$hostname + 'countries/all')
+      let countries = await response.json()
+      this.allCountries = countries
     },
 
     async showByHobby(hobby_id) {
@@ -117,12 +129,23 @@ export default {
         this.showData = showData 
       }
     },
+    async showByCountry(country_id) {
+      let response = await fetch(this.$hostname + `user/similar/country/${country_id}`)
+      let json = await response.json()
+      let users = json.users
+      let showData = {"by": country_id, "fellows": []}
+      for (const i of users) {
+        showData.fellows.push(await this.createFellow(i.id))
+        this.showData = showData 
+      }
+    },
 
   },
   mounted() {
     this.getDislikes()
     this.getSkills()
     this.getHobbies()
+    this.getCountries()
   }
 
 
@@ -149,6 +172,10 @@ export default {
 
 .spacing {
   margin-top: 3%;
+}
+
+.bt-yell {
+  background-color: yellow !important;
 }
 
 </style>

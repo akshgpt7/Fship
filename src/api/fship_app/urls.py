@@ -14,6 +14,7 @@ urlpatterns = [
     path('skills/all', views.getAllSkills, name='allSkills'), # Get all skills
     path('dislikes/all', views.getAllDislikes, name='allDislikes'), # Get all dislikes
     path('hobbies/all', views.getAllHobbies, name='allHobbies'), # Get all hobbies
+    path('countries/all', views.getAllCountries, name='allCountries'), # Get all countriess
     path('hobbies/<int:id>/users', views.getUsersWithSelectedHobby, name='usersWithCurrentHobies'), # Get users with a particular hobby
     path('skills/<int:id>/users', views.getUsersWithSelectedSkill, name='usersWithCurrentSkills'), # Get users with a particular skill
     path('dislikes/<int:id>/users', views.getUsersWithSelectedDislike, name='usersWithCurrentDislike'), # Get users with a particular dislike

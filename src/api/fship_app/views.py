@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from . import models
@@ -7,7 +8,7 @@ import json
 from neo4j import GraphDatabase
 from django.views.decorators.csrf import csrf_exempt
 
-driver = GraphDatabase.driver("bolt://34.224.62.229:32769", auth=("neo4j", "auditors-crust-topic"))
+driver = GraphDatabase.driver("bolt://34.224.62.229:32879", auth=("neo4j", "pushup-barge-meetings"))
 
 
 # Create your views here.
@@ -318,6 +319,31 @@ def getAllHobbies(request):
     response = {
         "hobbies" : hobbies,
     }
+
+    return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
+
+
+def getAllCountries(request):
+    ## Start the session
+    session = driver.session()
+    # Define the query
+    query = f"""
+    MATCH (c:Country) WITH count(c) AS frequency, c 
+    RETURN id(c) AS id, c.name AS country, frequency ORDER BY frequency
+    """ 
+
+    result = session.run(query) ## Execute the function 
+    ## The result is not subsciptible so we loop to get the single value 
+    ## Get all skills
+    countries:list = []
+    countries = [ {"id": record["id"], "country": record["country"]} for record in result ]
+
+    ## Close the session
+    session.close()
+
+    ## Create a dict with id and hobbies
+    response = countries
+    
 
     return HttpResponse(json.dumps(response), content_type='application/json; charset=UTF-8')
 
@@ -757,6 +783,8 @@ def getSimilarUsersByBio(request, id):
     "dislikes" ["dislikeA","dislikeB","dislikeC"]
 }
 """
+
+
 @csrf_exempt
 def registerUser(request):
     ## Start the session
@@ -787,17 +815,21 @@ def registerUser(request):
         MERGE (d:Dislike{description:dislike})
         MERGE (u) - [:dislikes] -> (d)
         WITH u
-        RETURN id(u) AS id, u.name AS name, u.email AS email, u.github AS github
+        RETURN id(u) AS id, u.name AS name, u.password AS password, u.email AS email, u.github AS github
         """
     
-    json_body = json.loads(request.body)
-    email = json_body["user"]["email"]
-    github = json_body["user"]["github"]
-    password = json_body["user"]["password"]
-    name = json_body["user"]["name"]
+    json_body = json.loads(request.body.decode('utf-8'))
+    password = json_body["password"]
+    email = json_body["email"]
+    github = json_body["github"]
+    name = json_body["name"]
     bio = json_body["bio"]
-    country = json_body["country"]
-    timezone = json_body["timezone"]
+    if len(json_body["location"]) > 1:
+        country = json_body["location"][0]
+        timezone = json_body["location"][1]
+    else:
+        country = ""
+        timezone = ""
     skills = json_body["skills"]
     hobbies = json_body["hobbies"]
     dislikes = json_body["dislikes"]
@@ -809,15 +841,21 @@ def registerUser(request):
     result = session.run(query) ## Execute the query 
     ## The result is not subsciptible so we loop to get the single value
 
-    person: FShipUser = None
+    person: fshipUser = None
 
     #  ## Get the user details
+    User.objects.create(
+        username=json_body["github"],
+        email=json_body["email"],
+        password=json_body["password"]
+    )
     for record in result:
-        person = models.FShipUser(
+        person = models.fshipUser(
             id=record["id"], 
             name=record["name"], 
             gitHandle=record["github"], 
-            email=record["email"]
+            email=record["email"],
+            password=record["password"]
         )
 
     ## Close the session

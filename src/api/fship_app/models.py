@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
 
 # Create your models here.
 ## Models made specifically for Neo4J
@@ -13,8 +12,6 @@ class fshipUser:
         self.email = email
         self.password = password
 
-        ##################### add this to the part where user signs-up and CREATE User cypher query is run
-        # User.objects.create(username=self.gitHandle, email=self.email, password=self.password)
             
     ## Return a dict version of the object for easy serialization
     def toJSON(self):
