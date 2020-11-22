@@ -30,6 +30,7 @@ A major goal of the MLH Fellowship is to expand your network and make wonderful 
  
 #### Frontend
  - Vue.js
+ - UIkit
 
 ## :electric_plug: Development Setup
 
