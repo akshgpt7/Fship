@@ -137,11 +137,13 @@ driver = GraphDatabase.driver("neo4j://localhost:7687", auth=("user", "password"
 - You can now navigate to `urls.py` file and use the routes to test the data you added to you Neo4J instance.
 
 ### Frontend setup
-
-# TODO
+1. Make sure you have `npm` installed on your system. If not, [this](https://www.npmjs.com/get-npm) might help.
+2. Navigate to the `src/frontend/frontend-fship` directory.
+3. Install dependencies by `npm install`.
+4. Run the dev server by `npm run serve`.
+5. Head to `localhost:8080` in your browser to see the web app.
 
 ## :zap: Usage
-
-# TODO
-
+A new user registers and adds their information, hobbies, technical skills, dislikes (things they'd love to rant about) to their profile. <br>
+Different users can then either view all the registered Fellows, or filter them by various categories. Once they find a relatable Fellow, they can press the "Connect" button for that Fellow, to send them an Email, with an auto-generated custom Jitsi meeting link by us to talk to them! 
 
